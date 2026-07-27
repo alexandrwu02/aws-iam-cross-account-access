@@ -7,6 +7,8 @@ This project implements a multi-account AWS architecture using IAM cross-account
 
 The project includes five AWS accounts that are managed under AWS Organisations - a management account, security account, workload account, logging account, and dev account. Two IAM roles are deployed in each members account: a read-only SecurityAuditRole for routine reviews and an IncidentResponseRole with limited write access for active incident handling. CloudTrail is utilised across accounts with logs centralised in a integral S3 bucket in the dedicated logging account.
 
+This project demonstrates enterprise AWS account architecture, IAM policy design, least privilege principles, temporary credential management, infrastructure as code with Terraform, and centralised audit logging
+
 
 
 
