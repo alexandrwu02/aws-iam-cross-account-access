@@ -11,7 +11,7 @@ This project demonstrates enterprise AWS account architecture, IAM policy design
 
 ## Architecture Diagram
 
-
+```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          AWS ORGANIZATION                               │
 │                                                                         │
@@ -70,7 +70,7 @@ Role Assumption Flow:
   5. Engineer operates in target account
   6. All actions logged to CloudTrail → Logging Account
 
-
+```
 
 
 
