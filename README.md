@@ -61,7 +61,7 @@ This project demonstrates enterprise AWS account architecture, IAM policy design
 │                  └───────────────────────┘                              │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
-
+```
 Role Assumption Flow:
   1. security-admin authenticates with password + MFA
   2. Calls sts:AssumeRole with ExternalId
@@ -70,7 +70,7 @@ Role Assumption Flow:
   5. Engineer operates in target account
   6. All actions logged to CloudTrail → Logging Account
 
-```
+
 
 
 
