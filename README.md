@@ -73,9 +73,13 @@ Role Assumption Flow:
 
 ## Account Structure
 Management Account -> Central control and houses the security-admin IAM user. No application resources deployed here.
+
 Security Account -> Represents the security team's operational environment.
+
 Workload Account -> Represents production application infrastructure.
+
 Logging Account -> Dedicated logging archive. Receives CloudTrail logs from all accounts. Kept separate to maintain integrity if another account is compromised.
+
 Dev Account -> Represents developing and testing environment. Kept isolated from production.
 
 ## Roles and Permissions
