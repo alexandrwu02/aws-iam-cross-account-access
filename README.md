@@ -10,7 +10,6 @@ The project includes five AWS accounts that are managed under AWS Organisations 
 This project demonstrates enterprise AWS account architecture, IAM policy design, least privilege principles, temporary credential management, infrastructure as code with Terraform, and centralised audit logging. These are applicable to cloud security engineering and consulting roles.
 
 ## Architecture Diagram
-
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          AWS ORGANIZATION                               │
@@ -83,8 +82,36 @@ Logging Account -> Dedicated logging archive. Receives CloudTrail logs from all 
 Dev Account -> Represents developing and testing environment. Kept isolated from production.
 
 ## Roles and Permissions
+Two roles were deployed in each account via Terraform.
 
 ### SecurityAuditRole
+A role configured to read-only for routine security reviews. Allows a security engineer to inspect configurations, review IAM settings, and check resource states.
+
+**Permissions attached:** 
+- 'SecurityAudit' (AWS managed) - read access to security-relevant configurations across all AWS services.
+- 'ViewOnlyAccess' (AWS managed) - read access to see what resources exist across the account.
+
+**Trust policy conditions:**
+- Principal must be from management account
+- ExternalId must match a pre-shared secret value
+- MFA must be present on the assuming identity
 
 ### IncidentResponseRole
+A role used during active security incidents with limited write access. Allows security engineers contain threats by isolating resources via security group modification or stopping compromised instances.
 
+**Permissions:**
+- Read access: EC2 describe actions, IAM read, CloudTrail, CloudWatch logs
+- Write access: Stop EC2 instances, modify security group rules
+
+**Deliberately excluded:**
+- No ability to delete resources
+- No ability to create users or roles
+- No access to S3, RDS, or other data stores
+- No ability to disable logging
+
+**Trust policy conditions:**
+- Same as SecurityAuditRole - management account principal, ExternalId, and MFA required
+
+## Security Design Decisions
+
+### Why Role Assumption Instead of Long-Lived Credentials?
