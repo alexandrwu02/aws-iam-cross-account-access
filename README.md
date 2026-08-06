@@ -115,3 +115,12 @@ A role used during active security incidents with limited write access. Allows s
 ## Security Design Decisions
 
 ### Why Role Assumption Instead of Long-Lived Credentials?
+If long-lived IAM access keys are ever leaked - through config files, a compromised developer machine, or an internal breach - an attacker would have permanent access until someone manually rotates them. In practice, keys often aren't rotated for months or years. 
+
+Role assumption temporary credentials automatically expire after a maximum of one hour. A leaked session token is only useful for this short window. Furthermore, there are no secrets to distribute or manage - the assuming identity just needs permission to call AssumeRole.
+
+## Why MFA is Required 
+The trust policies on every role include a condition that requires MFA to be present on the assuming identity. This means an attacker cannot assume any role without also accessing the MFA device. Credentials alone are not enough.
+
+### Why ExternalId is Used
+
