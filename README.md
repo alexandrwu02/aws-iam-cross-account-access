@@ -123,4 +123,12 @@ Role assumption temporary credentials automatically expire after a maximum of on
 The trust policies on every role include a condition that requires MFA to be present on the assuming identity. This means an attacker cannot assume any role without also accessing the MFA device. Credentials alone are not enough.
 
 ### Why ExternalId is Used
+ExternalId condition is used to protect against the confused deputy problem. Without it, any third party service that has been granted permission to assume roles in your account could be tricked by an attacker into assuming your roles on their behalf. When ExternalId condition is added to your trust policy, the assumption only works if a secret value is included, which is a secret that is set and only shared with trusted parties. 
+
+### Why Least Privilege was Applied 
+Each role has only the permissions it needs for its specific purpose. The 'SecurityAuditRole' has no write permissions. The 'IncidentResponseRole' has limited write for specific EC2 actions relevant to incident containment.
+
+This limits the blast radius of a compromised role due to the bounded permissions. This lessens the impact of attacks to be recoverable. 
+
+### Why Logs Are in a Separate Account
 
