@@ -9,6 +9,8 @@ The project includes five AWS accounts that are managed under AWS Organisations 
 
 This project demonstrates enterprise AWS account architecture, IAM policy design, least privilege principles, temporary credential management, infrastructure as code with Terraform, and centralised audit logging. These are applicable to cloud security engineering and consulting roles.
 
+---
+
 ## Architecture Diagram
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -69,6 +71,7 @@ Role Assumption Flow:
   5. Engineer operates in target account
   6. All actions logged to CloudTrail → Logging Account
 
+---
 
 ## Account Structure
 Management Account -> Central control and houses the security-admin IAM user. No application resources deployed here.
@@ -80,6 +83,8 @@ Workload Account -> Represents production application infrastructure.
 Logging Account -> Dedicated logging archive. Receives CloudTrail logs from all accounts. Kept separate to maintain integrity if another account is compromised.
 
 Dev Account -> Represents developing and testing environment. Kept isolated from production.
+
+---
 
 ## Roles and Permissions
 Two roles were deployed in each account via Terraform.
@@ -112,6 +117,8 @@ A role used during active security incidents with limited write access. Allows s
 **Trust policy conditions:**
 - Same as SecurityAuditRole - management account principal, ExternalId, and MFA required
 
+---
+
 ## Security Design Decisions
 
 ### Why Role Assumption Instead of Long-Lived Credentials?
@@ -131,4 +138,19 @@ Each role has only the permissions it needs for its specific purpose. The 'Secur
 This limits the blast radius of a compromised role due to the bounded permissions. This lessens the impact of attacks to be recoverable. 
 
 ### Why Logs Are in a Separate Account
+CloudTrail logs are shipped to a dedicated S3 bucket in the logging account. This means that even if the workload or security account is fully compromised, the attacker cannot access or delete logs - that would require access to completely separate credentials. Tamper-resistant logging is a core requirement in security architecture and is mandated by compliance frameworks like SOC 2, PCI DSS, and ISO 27001.
+
+---
+
+## How Role Assumption Works
+1.  The engineer authenticates to the management account as the 'security-admin' IAM user with their password and MFA code.
+
+2.  They call the AWS STS AssumeRole API, providing:
+    - The ARN of the role they want to assume
+    - Their MFA serial number and current token code
+    - The ExternalId secret
+3.  AWS STS checks the trust policy on the target role, checking:
+    - Is the request coming from the management account?
+    - Was MFA used?
+    - Does the ExternalId match
 
