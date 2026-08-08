@@ -149,8 +149,79 @@ CloudTrail logs are shipped to a dedicated S3 bucket in the logging account. Thi
     - The ARN of the role they want to assume
     - Their MFA serial number and current token code
     - The ExternalId secret
+
 3.  AWS STS checks the trust policy on the target role, checking:
     - Is the request coming from the management account?
     - Was MFA used?
     - Does the ExternalId match
+
+4.  If all checks pass, STS returns temporary credentials:
+    - AccessKeyId
+    - SecretAccessKey
+    - SessionToken
+    - Expiration timestamp (maximum 1 hour)
+
+5.  The engineer uses these credentials to gain access in the target account. Every API call made is logged to CloudTrail under the assumed role identity.
+
+6.  After one hour has passed, the credentials automatically expire and access is revoked.
+
+**Example CLI Command:**
+```bash
+aws sts assume-role \
+  --role-arn "arn:aws:iam::ACCOUNT_ID:role/SecurityAuditRole" \
+  --role-session-name "AuditSession" \
+  --external-id "YOUR_EXTERNAL_ID" \
+  --serial-number "arn:aws:iam::MGMT_ID:mfa/security-admin-mfa" \
+  --token-code "123456"
+```
+
+---
+
+## CloudTrail and Monitoring
+CloudTrail is enabled on all accounts with logs centralised in an S3 bucket centred in the logging account. Every API call across every account is recorded, including who made it and from what IP address, at what time, and whether it succeeded or failed.
+
+**Trail Configuration:**
+- Multi-region trail enabled: captures events across all AWS regions
+- Global service events enabled: captures global IAM events 
+- Log file validation enabled: generates digital signatures so logs that have not been tampered with can be verified
+- All management events logged: both read and write API calls
+
+**Key events to monitor for suspicious activity:** 
+| Event: Why it Matters|
+- AssumeRole failures: Could indicate credential testing or brute force
+- AssumeRole from unexpected IP address: Could indicate stolen credentials being used remotely
+- Cross-account access from unapproved accounts: Should never happen if controls are working at expected
+- AssumeRole outside business hours: Legitimate engineers would be working at expected times
+- Changes to trust policies: Could indicate an attacker trying to escalate access
+
+**Log storage:**
+The S3 bucket on the logging account has public access blocked, server-side encryption enabled with AES256, versioning enabled, and log file validation active. The bucket policy only allows CloudTrail service to write to it, and with bucket-owner-full-control. 
+
+---
+
+## Scaling Considerations
+This project only implements the architecture across five accounts. In a real world enterprise environment, this same pattern scales to hundreds of accounts while retaining the fundamental design.
+
+```
+Security Hub Account
+        │
+        ├── Production OU
+        │     ├── Account 1 (App A)
+        │     ├── Account 2 (App B)
+        │     └── Account 3 (App C)
+        │
+        ├── Development OU
+        │     ├── Account 10 (Dev A)
+        │     └── Account 11 (Dev B)
+        │
+        ├── Sandbox OU
+        │     └── Account 20 (Experiments)
+        │
+        └── Security OU
+              ├── Logging Account
+              └── Security Tooling Account
+```
+|This Project | Enterprise Scale |
+|---|---|
+|
 
